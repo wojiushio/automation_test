@@ -1,0 +1,612 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Automation Test Report</title>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <style id="css0" media="screen" type="text/css">
+    body {
+        font-family: verdana, arial, helvetica, sans-serif;
+        font-size: 80%;
+        width: 99%;}
+    table {font-size: 100%; }
+    a:visited {color:#800080; }
+    a:hover {color:red; }
+    
+    /* -- heading ---------------------------------------------------------------------- */
+    
+    .heading {
+        margin-top: 0ex;
+        font-size: 16pt;
+        color: gray;
+        font-weight: bold;
+    }
+    #time { width:100%; }
+    #time div {
+        white-space: nowrap;
+        width: 300px;
+        display: table-cell;
+        /*border: 1px solid red;*/
+    }
+    #summary { width:100%;}
+    #summary div {
+        white-space: nowrap;;
+        display: table-cell;
+        /*border: 1px solid red;*/
+    }
+    
+    /* -- report ------------------------------------------------------------------------ */
+    td {
+        word-wrap:break-word;
+        overflow:hidden;
+    }
+    #result_table {
+        table-layout:fixed;
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid #AAAAAA;
+    }
+    #header_row {
+        font-weight: bold;
+        color: white;
+        background-color: #777777;
+        text-shadow: black 2px 2px 2px;
+    }
+    #result_table td {
+        padding: 2px;
+        border: 1px solid #AAAAAA;
+    }
+    .case  { font-weight: bold; }
+    .runCase { background-color: #DDDDDD; }
+    .passCase { background-color: limegreen; }
+    .skipCase { background-color: #CCFF99; }
+    .failCase { background-color: #FFCC22; }
+    .errorCase { background-color: #FF3333; }
+    .runStep { background-color: #DDDDDD; }
+    .passStep { background-color: limegreen; }
+    .skipStep { background-color: #CCFF99; }
+    .failStep { background-color: #FFCC22; font-weight: bold; }
+    .errorStep { background-color: #FF3333; font-weight: bold;}
+    .operateStep { background-color: #CCFF99; }
+    td[type='state_column'] a {color: black;}
+    td[type='state_column'] a:hover {color: white;}
+    td[type='id_column'] a {color: black;}
+    td[type='id_column'] a:hover {color: white;}
+    td[type='state_column'] {text-align:center;}
+    td[type='id_column'] {text-align:center;}
+
+    .testStep { margin-left: 2em; }
+    .blodFont { font-weight: bold; }
+    tr[type='tr_step'] {display: none;}
+    tr[type='tr_detail'] {display: none;}
+    tr[trcls='passStep'] { background-color: #6c6; }
+    tr[trcls='skipStep'] { background-color: #DDDDDD; }
+    tr[trcls='failStep'] { background-color: #c60; font-weight: bold; }
+    tr[trcls='errorStep'] { background-color: #c00; font-weight: bold; }
+    tr[trcls='operateStep'] { background-color: #DDDDDD; }
+
+    /* -- ending ---------------------------------------------------------------------- */
+</style>
+    <style id="css_step_1" media="screen" type="text/css">tr[cid='1'][type='tr_step'] {display: none;}</style>
+    <style id="css_step_detail_show_1" media="screen" type="text/css">tr.show[cid='1'][type='tr_detail'] {display: none;}</style>
+    <style id="css_step_filter_1" media="screen" type="text/css"></style>
+    <script>
+var show = []
+var show_case = []
+var show_detail = []
+
+function arrContainsObj(arr, obj) {
+    var i = arr.length;
+    while (i--) {
+        if (arr[i] === obj) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function arrRemoveObj(arr, obj) {
+    var i = arr.length;
+    while (i--) {
+        if(arr[i] == obj) {
+            arr.splice(i, 1);
+            break;
+        }
+    }
+}
+
+function hideAllSteps(run_count) {
+    for (var i = 1; i <= run_count; i++) {
+        document.getElementById('css_step_'+i).innerHTML='tr[cid="'+i+'"][type="tr_step"] {display:none;}'
+        document.getElementById('css_step_detail_show_'+i).innerHTML='tr.show[cid="'+i+'"][type="tr_detail"] {display:none;}'
+    }
+    show= []
+    show_case = []
+}
+
+function showTC(cid) {
+    cid = cid.toString()
+    if (arrContainsObj(show, cid)) {
+        arrRemoveObj(show, cid)
+        document.getElementById('css_step_'+cid).innerHTML=''
+        document.getElementById('css_step_detail_show_'+cid).innerHTML=''
+        var temp = []
+        for (var i = 0; i < show_case.length; i++) {
+            if (show_case[i].substr(0,cid.length) != cid) {
+                temp.push(show_case[i])
+            }
+        }
+        show_case = temp.slice(0)
+    }
+    else {
+        show.push(cid)
+        document.getElementById('css_step_'+cid).innerHTML='tr[cid="'+cid+'"][lid="'+cid+'"][type="tr_step"] {display:table-row;}'
+        document.getElementById('css_step_detail_show_'+cid).innerHTML='tr.show[cid="'+cid+'"][lid="'+cid+'"][type="tr_detail"] {display:table-row;}'
+        document.getElementById('css_step_filter_'+cid).innerHTML=''
+    }
+}
+
+function showShareSteps(cid, lid) {
+    if (arrContainsObj(show_case, lid)) {
+        var temp = []
+        for (var i = 0; i < show_case.length; i++) {
+            if (show_case[i].substr(0,lid.length) != lid) {
+                temp.push(show_case[i])
+            }
+        }
+        show_case = temp.slice(0)
+        var css = 'tr[cid="'+cid+'"][lid="'+cid+'"][type="tr_step"] {display:table-row;}'
+        var css2 = 'tr.show[cid="'+cid+'"][lid="'+cid+'"][type="tr_detail"] {display:table-row;}'
+        for (var i = 0; i < show_case.length; i++) {
+            css = css + 'tr[cid="'+cid+'"][lid="'+show_case[i]+'"][type="tr_step"] {display:table-row;}'
+            css2 = css2 + 'tr.show[cid="'+cid+'"][lid="'+show_case[i]+'"][type="tr_detail"] {display:table-row;}'
+        }
+        document.getElementById('css_step_'+cid).innerHTML=css
+        document.getElementById('css_step_detail_show_'+cid).innerHTML=css2
+    }
+    else {
+        show_case.push(lid)
+        document.getElementById('css_step_'+cid).innerHTML = document.getElementById('css_step_'+cid).innerHTML + 'tr[cid="'+cid+'"][lid="'+lid+'"][type="tr_step"] {display:table-row;}'
+        document.getElementById('css_step_detail_show_'+cid).innerHTML = document.getElementById('css_step_detail_show_'+cid).innerHTML + 'tr.show[cid="'+cid+'"][lid="'+lid+'"][type="tr_detail"] {display:table-row;}'
+    }
+}
+
+function showStateSteps(cid, state) {
+    cid = cid.toString()
+    if (!arrContainsObj(show, cid)) {
+        showTC(cid)
+    }
+    var state_=[]
+    if (state.indexOf(',') > 0) {
+        state_ = state.split(',');
+    }
+    else {
+        state_=[state]
+    }
+    states=['p','f','e','o','s']
+    css = ''
+    for (var i = 0; i < states.length; i++) {
+        if (arrContainsObj(state_,states[i])) {
+            continue
+        }
+        css = css + 'tr[cid="'+cid+'"][type="tr_step"][state="'+states[i]+'"] {display:none;}'
+        css = css + 'tr[cid="'+cid+'"][type="tr_detail"][state="'+states[i]+'"] {display:none;}'
+    }
+    document.getElementById('css_step_filter_'+cid).innerHTML=css
+    var temp = []
+    for (var i = 0; i < show_detail.length; i++) {
+        if (show_detail[i].substr(0,cid.length) == cid) {
+            temp.push(show_detail[i])
+        }
+    }
+    for (var i = 0; i < temp.length; i++) {
+        showStepDetail(temp[i])
+    }
+}
+
+function showStepDetail(id) {
+    var e1 = document.getElementById('step_detail_1_'+id)
+    var e2 = document.getElementById('step_detail_2_'+id)
+    var e3 = document.getElementById('step_id_column_'+id)
+    var e4 = document.getElementById('step_step_column_'+id)
+    var e5 = document.getElementById('step_state_column_'+id)
+    var e6 = document.getElementById('step_ss_column_'+id)
+    if (arrContainsObj(show_detail, id)) {
+        arrRemoveObj(show_detail, id)
+        e1.className = '';
+        e2.className = '';
+        e3.setAttribute('rowspan',1);
+        e4.style.borderBottom='2px solid #AAAAAA';
+        e5.style.borderBottom='2px solid #AAAAAA';
+        e6.style.borderBottom='2px solid #AAAAAA';
+    }
+    else {
+        show_detail.push(id)
+        e1.className = 'show';
+        e2.className = 'show';
+        e3.setAttribute('rowspan',3);
+        e4.style.borderBottom='';
+        e5.style.borderBottom='';
+        e6.style.borderBottom='';
+    }
+}</script>
+  </head>
+  <body>
+    <div class="heading">Automation Test Report</div>
+    <div id="time">
+      <div class="blodFont" style="width:100px;">Start Time</div>
+      <div>2017-05-25 14:34:44.120117</div>
+      <div class="blodFont" style="width:100px;">End Time</div>
+      <div>2017-05-25 14:36:07.271484</div>
+      <div class="blodFont" style="width:100px;">Duration</div>
+      <div>0:01:23.151367</div>
+    </div>
+    <div id="summary">
+      <div style="width:100px; font-weight:bold;">TC Status:</div>
+      <div class="runCase" style="text-align:center; width:150px; font-weight:normal; white-space:pre;">Run	1</div>
+      <div class="passCase" style="text-align:center; width:150px; font-weight:normal; white-space:pre;">Pass	0</div>
+      <div class="failCase" style="text-align:center; width:150px; font-weight:normal; white-space:pre;">Fail	0</div>
+      <div class="errorCase" style="text-align:center; width:150px; font-weight:normal; white-space:pre;">Error	1</div>
+    </div>
+    <div style="text-align:right;">
+      <button id="hide_all_details_button_1" onclick="hideAllSteps(1)">Hide All Steps</button>
+    </div>
+    <table id="result_table">
+      <tr id="header_row" style="text-align:center;" type="tr_header">
+        <td style="white-space:nowrap; width:60px">ID</td>
+        <td style="white-space:nowrap">Test case/Step</td>
+        <td class="runCase" style="white-space:nowrap; width:50px">Run</td>
+        <td class="passCase" style="white-space:nowrap; width:50px">Pass</td>
+        <td class="failCase" style="white-space:nowrap; width:50px">Fail</td>
+        <td class="errorCase" style="white-space:nowrap; width:50px">Error</td>
+        <td class="skipCase" style="white-space:nowrap; width:50px">Skip</td>
+        <td style="white-space:nowrap; width:35%">Screenshot &amp; URL</td>
+      </tr>
+      <tr class="case" id="case_1" name="买车_下单_限时抢购_M.xlsx" type="tr_case">
+        <td class="errorCase" style="white-space:nowrap;border-bottom: 2px solid #AAAAAA;" type="id_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showTC(1)">1</a>
+        </td>
+        <td style="border-bottom: 2px solid #AAAAAA;">
+          <a href="javascript:;" onclick="this.style.color='#800080';showTC(1)">买车_下单_限时抢购_M.xlsx</a>
+        </td>
+        <td class="runStep" style="border-bottom: 2px solid #AAAAAA;" type="state_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStateSteps(1,'p,f,e')">3</a>
+        </td>
+        <td class="passStep" style="border-bottom: 2px solid #AAAAAA;" type="state_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStateSteps(1,'p')">2</a>
+        </td>
+        <td class="failStep" style="border-bottom: 2px solid #AAAAAA;" type="state_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStateSteps(1,'f')">0</a>
+        </td>
+        <td class="errorStep" style="border-bottom: 2px solid #AAAAAA;" type="state_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStateSteps(1,'e')">1</a>
+        </td>
+        <td class="skipStep" style="border-bottom: 2px solid #AAAAAA;" type="state_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStateSteps(1,'s')">1</a>
+        </td>
+        <td style="border-bottom: 2px solid #AAAAAA;"></td>
+      </tr>
+      <tr cid="1" id="step_1-1" lid="1" name="step_1-1" sid="1" state="o" type="tr_step">
+        <td class="operateStep" id="step_id_column_1-1" style="white-space:nowrap;border-bottom: 2px solid #AAAAAA;" type="id_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-1')">1-1</a>
+        </td>
+        <td id="step_step_column_1-1" style="border-bottom: 2px solid #AAAAAA;"><br/>[Initialize]</td>
+        <td class="operateStep" colspan="5" id="step_state_column_1-1" style="border-bottom: 2px solid #AAAAAA;" type="state_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-1')">OK</a>
+        </td>
+        <td id="step_ss_column_1-1" style="border-bottom: 2px solid #AAAAAA;">
+          <div></div>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_1_1-1" lid="1" sid="1" state="o" type="tr_detail">
+        <td>
+          <span class="blodFont">Locator:<br/> </span>
+          <span>d:\site\test\automation_test\run_M\UAT\买车_下单_限时抢购_M.xlsx</span>
+        </td>
+        <td colspan="4">
+          <span class="blodFont">By:<br/></span>
+          <span>local browser|Chrome</span>
+        </td>
+        <td>
+          <span class="blodFont">Index:<br/></span>
+          <span></span>
+        </td>
+        <td>
+          <span class="blodFont">Data:<br/></span>
+          <span></span>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_2_1-1" lid="1" sid="1" state="o" type="tr_detail">
+        <td colspan="7" style="border-bottom: 2px solid #AAAAAA;">Success
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-1')"><br/>^ hide detail ^</a>
+        </td>
+      </tr>
+      <tr cid="1" id="step_1-2" lid="1" name="step_1-2" sid="2" state="s" type="tr_step">
+        <td class="skipStep" id="step_id_column_1-2" style="white-space:nowrap;border-bottom: 2px solid #AAAAAA;" type="id_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-2')">1-2</a>
+        </td>
+        <td id="step_step_column_1-2" style="border-bottom: 2px solid #AAAAAA;"><br/>[]</td>
+        <td class="skipStep" colspan="5" id="step_state_column_1-2" style="border-bottom: 2px solid #AAAAAA;" type="state_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-2')">SKIP</a>
+        </td>
+        <td id="step_ss_column_1-2" style="border-bottom: 2px solid #AAAAAA;">
+          <div></div>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_1_1-2" lid="1" sid="2" state="s" type="tr_detail">
+        <td>
+          <span class="blodFont">Locator:<br/> </span>
+          <span></span>
+        </td>
+        <td colspan="4">
+          <span class="blodFont">By:<br/></span>
+          <span></span>
+        </td>
+        <td>
+          <span class="blodFont">Index:<br/></span>
+          <span></span>
+        </td>
+        <td>
+          <span class="blodFont">Data:<br/></span>
+          <span></span>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_2_1-2" lid="1" sid="2" state="s" type="tr_detail">
+        <td colspan="7" style="border-bottom: 2px solid #AAAAAA;">Skip
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-2')"><br/>^ hide detail ^</a>
+        </td>
+      </tr>
+      <tr cid="1" id="step_1-3" lid="1" name="step_1-3" sid="3" state="p" type="tr_step">
+        <td class="passStep" id="step_id_column_1-3" style="white-space:nowrap;border-bottom: 2px solid #AAAAAA;" type="id_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-3')">1-3</a>
+        </td>
+        <td id="step_step_column_1-3" style="border-bottom: 2px solid #AAAAAA;">打开首页<br/>[go to url]</td>
+        <td class="passStep" colspan="5" id="step_state_column_1-3" style="border-bottom: 2px solid #AAAAAA;" type="state_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-3')">PASS</a>
+        </td>
+        <td id="step_ss_column_1-3" style="border-bottom: 2px solid #AAAAAA;">
+          <div>http://muat.ds.cn/</div>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_1_1-3" lid="1" sid="3" state="p" type="tr_detail">
+        <td>
+          <span class="blodFont">Locator:<br/> </span>
+          <span>http://muat.ds.cn</span>
+        </td>
+        <td colspan="4">
+          <span class="blodFont">By:<br/></span>
+          <span>variable</span>
+        </td>
+        <td>
+          <span class="blodFont">Index:<br/></span>
+          <span></span>
+        </td>
+        <td>
+          <span class="blodFont">Data:<br/></span>
+          <span></span>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_2_1-3" lid="1" sid="3" state="p" type="tr_detail">
+        <td colspan="7" style="border-bottom: 2px solid #AAAAAA;">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-3')"><br/>^ hide detail ^</a>
+        </td>
+      </tr>
+      <tr cid="1" id="step_1-4" lid="1" name="step_1-4" sid="4" state="e" type="tr_step">
+        <td class="errorStep" id="step_id_column_1-4" style="white-space:nowrap;border-bottom: 2px solid #AAAAAA;" type="id_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-4')">1-4</a>
+        </td>
+        <td id="step_step_column_1-4" style="border-bottom: 2px solid #AAAAAA;">登录<br/>[public step]</td>
+        <td class="errorStep" colspan="5" id="step_state_column_1-4" style="border-bottom: 2px solid #AAAAAA;" type="state_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showShareSteps('1','1-4')">Exception appeared in public step</a>
+        </td>
+        <td id="step_ss_column_1-4" style="border-bottom: 2px solid #AAAAAA;">
+          <div>http://muat.ds.cn/</div>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_1_1-4" lid="1" sid="4" state="e" type="tr_detail">
+        <td>
+          <span class="blodFont">Locator:<br/> </span>
+          <span>public step\M\login_M.xlsx</span>
+        </td>
+        <td colspan="4">
+          <span class="blodFont">By:<br/></span>
+          <span></span>
+        </td>
+        <td>
+          <span class="blodFont">Index:<br/></span>
+          <span></span>
+        </td>
+        <td>
+          <span class="blodFont">Data:<br/></span>
+          <span></span>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_2_1-4" lid="1" sid="4" state="e" type="tr_detail">
+        <td colspan="7" style="border-bottom: 2px solid #AAAAAA;">
+          <a href="javascript:;" onclick="this.style.color='#800080';showShareSteps('1','1-4')">Please find the details in public step</a>
+        </td>
+      </tr>
+      <tr cid="1" id="step_1-4-1" lid="1-4" name="step_1-4-1" sid="1" state="o" type="tr_step">
+        <td class="operateStep" id="step_id_column_1-4-1" style="white-space:nowrap;border-bottom: 2px solid #AAAAAA;" type="id_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-4-1')">1-4-1</a>
+        </td>
+        <td id="step_step_column_1-4-1" style="border-bottom: 2px solid #AAAAAA;"><br/>[Initialize]</td>
+        <td class="operateStep" colspan="5" id="step_state_column_1-4-1" style="border-bottom: 2px solid #AAAAAA;" type="state_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-4-1')">OK</a>
+        </td>
+        <td id="step_ss_column_1-4-1" style="border-bottom: 2px solid #AAAAAA;">
+          <div></div>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_1_1-4-1" lid="1-4" sid="1" state="o" type="tr_detail">
+        <td>
+          <span class="blodFont">Locator:<br/> </span>
+          <span>d:\site\test\automation_test\run_M\UAT\public step\M\login_M.xlsx</span>
+        </td>
+        <td colspan="4">
+          <span class="blodFont">By:<br/></span>
+          <span>local browser|Chrome</span>
+        </td>
+        <td>
+          <span class="blodFont">Index:<br/></span>
+          <span></span>
+        </td>
+        <td>
+          <span class="blodFont">Data:<br/></span>
+          <span></span>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_2_1-4-1" lid="1-4" sid="1" state="o" type="tr_detail">
+        <td colspan="7" style="border-bottom: 2px solid #AAAAAA;">Success
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-4-1')"><br/>^ hide detail ^</a>
+        </td>
+      </tr>
+      <tr cid="1" id="step_1-4-2" lid="1-4" name="step_1-4-2" sid="2" state="p" type="tr_step">
+        <td class="passStep" id="step_id_column_1-4-2" style="white-space:nowrap;border-bottom: 2px solid #AAAAAA;" type="id_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-4-2')">1-4-2</a>
+        </td>
+        <td id="step_step_column_1-4-2" style="border-bottom: 2px solid #AAAAAA;">打开大圣车服M站<br/>[public step]</td>
+        <td class="passStep" colspan="5" id="step_state_column_1-4-2" style="border-bottom: 2px solid #AAAAAA;" type="state_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showShareSteps('1','1-4-2')">PASS</a>
+        </td>
+        <td id="step_ss_column_1-4-2" style="border-bottom: 2px solid #AAAAAA;">
+          <div>http://muat.ds.cn/</div>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_1_1-4-2" lid="1-4" sid="2" state="p" type="tr_detail">
+        <td>
+          <span class="blodFont">Locator:<br/> </span>
+          <span>openIndex_M.xlsx</span>
+        </td>
+        <td colspan="4">
+          <span class="blodFont">By:<br/></span>
+          <span></span>
+        </td>
+        <td>
+          <span class="blodFont">Index:<br/></span>
+          <span></span>
+        </td>
+        <td>
+          <span class="blodFont">Data:<br/></span>
+          <span></span>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_2_1-4-2" lid="1-4" sid="2" state="p" type="tr_detail">
+        <td colspan="7" style="border-bottom: 2px solid #AAAAAA;">
+          <a href="javascript:;" onclick="this.style.color='#800080';showShareSteps('1','1-4-2')">Please find the details in public step</a>
+        </td>
+      </tr>
+      <tr cid="1" id="step_1-4-2-1" lid="1-4-2" name="step_1-4-2-1" sid="1" state="o" type="tr_step">
+        <td class="operateStep" id="step_id_column_1-4-2-1" style="white-space:nowrap;border-bottom: 2px solid #AAAAAA;" type="id_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-4-2-1')">1-4-2-1</a>
+        </td>
+        <td id="step_step_column_1-4-2-1" style="border-bottom: 2px solid #AAAAAA;"><br/>[Initialize]</td>
+        <td class="operateStep" colspan="5" id="step_state_column_1-4-2-1" style="border-bottom: 2px solid #AAAAAA;" type="state_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-4-2-1')">OK</a>
+        </td>
+        <td id="step_ss_column_1-4-2-1" style="border-bottom: 2px solid #AAAAAA;">
+          <div></div>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_1_1-4-2-1" lid="1-4-2" sid="1" state="o" type="tr_detail">
+        <td>
+          <span class="blodFont">Locator:<br/> </span>
+          <span>d:\site\test\automation_test\run_M\UAT\public step\M\openIndex_M.xlsx</span>
+        </td>
+        <td colspan="4">
+          <span class="blodFont">By:<br/></span>
+          <span>local browser|Chrome</span>
+        </td>
+        <td>
+          <span class="blodFont">Index:<br/></span>
+          <span></span>
+        </td>
+        <td>
+          <span class="blodFont">Data:<br/></span>
+          <span></span>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_2_1-4-2-1" lid="1-4-2" sid="1" state="o" type="tr_detail">
+        <td colspan="7" style="border-bottom: 2px solid #AAAAAA;">Success
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-4-2-1')"><br/>^ hide detail ^</a>
+        </td>
+      </tr>
+      <tr cid="1" id="step_1-4-2-2" lid="1-4-2" name="step_1-4-2-2" sid="2" state="p" type="tr_step">
+        <td class="passStep" id="step_id_column_1-4-2-2" style="white-space:nowrap;border-bottom: 2px solid #AAAAAA;" type="id_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-4-2-2')">1-4-2-2</a>
+        </td>
+        <td id="step_step_column_1-4-2-2" style="border-bottom: 2px solid #AAAAAA;">打开大圣车服M站<br/>[go to url]</td>
+        <td class="passStep" colspan="5" id="step_state_column_1-4-2-2" style="border-bottom: 2px solid #AAAAAA;" type="state_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-4-2-2')">PASS</a>
+        </td>
+        <td id="step_ss_column_1-4-2-2" style="border-bottom: 2px solid #AAAAAA;">
+          <div>http://muat.ds.cn/</div>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_1_1-4-2-2" lid="1-4-2" sid="2" state="p" type="tr_detail">
+        <td>
+          <span class="blodFont">Locator:<br/> </span>
+          <span>http://muat.ds.cn</span>
+        </td>
+        <td colspan="4">
+          <span class="blodFont">By:<br/></span>
+          <span>variable</span>
+        </td>
+        <td>
+          <span class="blodFont">Index:<br/></span>
+          <span></span>
+        </td>
+        <td>
+          <span class="blodFont">Data:<br/></span>
+          <span></span>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_2_1-4-2-2" lid="1-4-2" sid="2" state="p" type="tr_detail">
+        <td colspan="7" style="border-bottom: 2px solid #AAAAAA;">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-4-2-2')"><br/>^ hide detail ^</a>
+        </td>
+      </tr>
+      <tr cid="1" id="step_1-4-3" lid="1-4" name="step_1-4-3" sid="3" state="e" type="tr_step">
+        <td class="errorStep" id="step_id_column_1-4-3" style="white-space:nowrap;border-bottom: 2px solid #AAAAAA;" type="id_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-4-3')">1-4-3</a>
+        </td>
+        <td id="step_step_column_1-4-3" style="border-bottom: 2px solid #AAAAAA;">点击我的<br/>[click]</td>
+        <td class="errorStep" colspan="5" id="step_state_column_1-4-3" style="border-bottom: 2px solid #AAAAAA;" type="state_column">
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-4-3')">ERROR</a>
+        </td>
+        <td id="step_ss_column_1-4-3" style="border-bottom: 2px solid #AAAAAA;">
+          <a href="screenshot_2017-05-25_14.36.01.846679_SS.png" onclick="this.style.color='#800080';" target="_blank" title="screenshot_2017-05-25_14.36.01.846679_SS.png">Screenshot</a>
+          <div>http://muat.ds.cn/</div>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_1_1-4-3" lid="1-4" sid="3" state="e" type="tr_detail">
+        <td>
+          <span class="blodFont">Locator:<br/> </span>
+          <span>/html/body/div/div[3]/ul/li[5]/div/img</span>
+        </td>
+        <td colspan="4">
+          <span class="blodFont">By:<br/></span>
+          <span>xpath</span>
+        </td>
+        <td>
+          <span class="blodFont">Index:<br/></span>
+          <span></span>
+        </td>
+        <td>
+          <span class="blodFont">Data:<br/></span>
+          <span></span>
+        </td>
+      </tr>
+      <tr cid="1" id="step_detail_2_1-4-3" lid="1-4" sid="3" state="e" type="tr_detail">
+        <td colspan="7" style="border-bottom: 2px solid #AAAAAA;">Message: unknown error: Element &lt;img src=&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAYAAAA5ZDbSAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA3hpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNi1jMDY3IDc5LjE1Nzc0NywgMjAxNS8wMy8zMC0yMzo0MDo0MiAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDpkYzNhMWU4ZC05MzlhLTQzY2ItODE2My05MGQ4ZDc1Y2UzNWYiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6MUVFRjU2MTIyNDAyMTFFNzlBOUM5MEI2RkZFQkY3RkYiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6MUVFRjU2MTEyNDAyMTFFNzlBOUM5MEI2RkZFQkY3RkYiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTUgKE1hY2ludG9zaCkiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpkYzNhMWU4ZC05MzlhLTQzY2ItODE2My05MGQ4ZDc1Y2UzNWYiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6ZGMzYTFlOGQtOTM5YS00M2NiLTgxNjMtOTBkOGQ3NWNlMzVm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&quot; _v-8fb503ae=&quot;&quot; style=&quot;null; background: yellow; border: 2px solid red;&quot;&gt; is not clickable at point (717, 842). Other element would receive the click: &lt;div class=&quot;loading-container&quot; _v-8820597a=&quot;&quot; _v-5a49688c=&quot;&quot;&gt;...&lt;/div&gt;
+  (Session info: chrome=58.0.3029.110)
+  (Driver info: chromedriver=2.28.455520 (cc17746adff54984afff480136733114c6b3704b),platform=Windows NT 6.1.7601 SP1 x86_64)
+
+          <a href="javascript:;" onclick="this.style.color='#800080';showStepDetail('1-4-3')"><br/>^ hide detail ^</a>
+        </td>
+      </tr>
+    </table>
+    <div style="text-align:right;">
+      <button id="hide_all_details_button_2" onclick="hideAllSteps(1)">Hide All Steps</button>
+    </div>
+  </body>
+</html>
